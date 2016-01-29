@@ -9,6 +9,7 @@ var server = new Hapi.Server({})
 var port = parseInt(process.env.CORSPROXY_PORT || process.env.PORT || 1337, 10)
 var host = (process.env.CORSPROXY_HOST || 'localhost');
 var proxy = server.connection({ port: port, labels: ['proxy'], host: host})
+var wreck = require('wreck');
 
 server.register(require('inert'), function () {})
 server.register(require('h2o2'), function () {})
@@ -35,13 +36,26 @@ proxy.route({
   handler: {
     proxy: {
       passThrough: true,
-      mapUri: function (request, callback) {
+      mapUri: function (request, reply) {
         request.host = request.params.host
         request.path = request.path.substr(request.params.host.length + 1)
         request.headers['host'] = request.host
         var query = request.url.search ? request.url.search : ''
         console.log('proxy to http://' + request.host + request.path)
-        callback(null, 'http://' + request.host + request.path + query, request.headers)
+        reply(null, 'http://' + request.host + request.path + query, request.headers)
+      },
+      onResponse: function (err, res, request, reply, settings, ttl) {
+        var query = request.url.search ? request.url.search : ''
+        var url = 'http://' + request.host + request.path
+
+        if(url == "http://www.hkepc.com/forum/logging.php"){
+          // return the cookie for future browsering
+          reply(res.headers['set-cookie'])
+        }
+        else{
+          reply(res)          
+        }
+
       }
     }
   }

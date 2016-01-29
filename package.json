@@ -15,7 +15,8 @@
     "hapi-cors-headers": "^1.0.0",
     "http-proxy": "~1.11",
     "inert": "^3.0.1",
-    "vision": "^3.0.0"
+    "vision": "^3.0.0",
+    "wreck": "^7.0.0"
   },
   "devDependencies": {
     "chai": "^3.2.0",
