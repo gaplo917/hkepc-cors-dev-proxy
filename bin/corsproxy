@@ -40,7 +40,14 @@ proxy.route({
         request.path = request.path.substr(request.params.host.length + 1)
         request.headers['host'] = request.host
         var query = request.url.search ? request.url.search : ''
-        console.log('proxy to http://' + request.host + request.path)
+        // console.log('proxy to http://' + request.host + request.path)
+        // console.log(request.headers)
+        var url = 'http://' + request.host + request.path
+        if(url != "http://www.hkepc.com/forum/logging.php"){
+          // inject the header
+          request.headers['cookie'] = request.headers['hkepc-token'] || ""
+        }
+
         reply(null, 'http://' + request.host + request.path + query, request.headers)
       },
       onResponse: function (err, res, request, reply, settings, ttl) {
