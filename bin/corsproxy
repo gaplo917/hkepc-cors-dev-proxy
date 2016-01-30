@@ -36,6 +36,7 @@ proxy.route({
     proxy: {
       passThrough: true,
       xforward: true,
+      redirects: 1,
       mapUri: function (request, reply) {
         request.host = request.params.host
         request.path = request.path.substr(request.params.host.length + 1)
