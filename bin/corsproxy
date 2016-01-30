@@ -36,34 +36,37 @@ proxy.route({
     proxy: {
       passThrough: true,
       xforward: true,
+      localStatePassThrough: true,
       redirects: 1,
-      mapUri: function (request, reply) {
+      timeout: 30000,
+      mapUri: function (request, callback) {
         request.host = request.params.host
         request.path = request.path.substr(request.params.host.length + 1)
+        const query = request.url.search ? request.url.search : ''
+
         request.headers['host'] = request.host
-        var query = request.url.search ? request.url.search : ''
-        // console.log('proxy to http://' + request.host + request.path)
-        // console.log(request.headers)
-        var url = 'http://' + request.host + request.path
+        request.headers['referer'] = 'http://' + request.host + request.path + query
+
+        const url = 'http://' + request.host + request.path
+
         if(url != "http://www.hkepc.com/forum/logging.php"){
           // inject the header
           request.headers['cookie'] = request.headers['hkepc-token'] || ""
         }
 
-        reply(null, 'http://' + request.host + request.path + query, request.headers)
+        callback(null, 'http://' + request.host + request.path + query, request.headers)
       },
       onResponse: function (err, res, request, reply, settings, ttl) {
-        var query = request.url.search ? request.url.search : ''
-        var url = 'http://' + request.host + request.path
+        const query = request.url.search ? request.url.search : ''
+        const url = 'http://' + request.host + request.path
 
         if(url == "http://www.hkepc.com/forum/logging.php"){
           // return the cookie for future browsering
           reply(res.headers['set-cookie'])
         }
         else{
-          reply(res)          
+          reply(res);          
         }
-
       }
     }
   }
@@ -73,15 +76,15 @@ proxy.route({
 proxy.route({
   method: ['GET'],
   path: '/',
-  handler: {
-    file: 'public/index.html'
+  handler: function(request,reply) {
+    return reply('')
   }
 })
 proxy.route({
   method: 'OPTIONS',
   path: '/{host}/{path*}',
-  handler: {
-    file: 'public/index.html'
+  handler: function(request, reply) {
+    return reply('')
   }
 })
 proxy.route({
