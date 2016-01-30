@@ -30,7 +30,7 @@ server.register({
 
 // proxy route
 proxy.route({
-  method: '*',
+  method: ['GET','POST'],
   path: '/{host}/{path*}',
   handler: {
     proxy: {
@@ -71,8 +71,15 @@ proxy.route({
 
 // default route
 proxy.route({
-  method: 'GET',
+  method: ['GET'],
   path: '/',
+  handler: {
+    file: 'public/index.html'
+  }
+})
+proxy.route({
+  method: 'OPTIONS',
+  path: '/{host}/{path*}',
   handler: {
     file: 'public/index.html'
   }
