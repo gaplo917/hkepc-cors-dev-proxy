@@ -1,0 +1,15 @@
+before_script:
+  - echo "running before_script"
+  - GIT_TAG=$(git log -n 1 --pretty=format:%h)
+  - echo $GIT_TAG
+stages:
+  - build
+
+build_image:
+  stage: build
+  script:
+    - BASE_NAME=registry.gitlab.com/gaplo917/cors-proxy
+    - docker build -t $BASE_NAME .
+    - docker tag $BASE_NAME $BASE_NAME:$GIT_TAG
+    - docker push $BASE_NAME
+    - docker rmi $BASE_NAME:$GIT_TAG
