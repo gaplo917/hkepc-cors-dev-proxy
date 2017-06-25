@@ -10,6 +10,9 @@ var port = parseInt(process.env.CORSPROXY_PORT || process.env.PORT || 1337, 10)
 var host = (process.env.CORSPROXY_HOST || '0.0.0.0');
 var proxy = server.connection({ port: port, labels: ['proxy'], host: host})
 
+const protocol = 'https://'
+const hkepcLoginUrl = protocol + "www.hkepc.com/forum/logging.php"
+
 server.register(require('inert'), function () {})
 server.register(require('h2o2'), function () {})
 
@@ -44,23 +47,25 @@ proxy.route({
         request.path = request.path.substr(request.params.host.length + 1)
         const query = request.url.search ? request.url.search : ''
 
+
         request.headers['host'] = request.host
-        request.headers['referer'] = 'http://' + request.host + request.path + query
+        request.headers['referer'] = protocol + request.host + request.path + query
 
-        const url = 'http://' + request.host + request.path
+        const url = protocol + request.host + request.path
 
-        if(url != "http://www.hkepc.com/forum/logging.php"){
+        if(url != hkepcLoginUrl){
           // inject the header
           request.headers['cookie'] = request.headers['hkepc-token'] || ""
         }
 
-        callback(null, 'http://' + request.host + request.path + query, request.headers)
+
+        callback(null, protocol + request.host + request.path + query, request.headers)
       },
       onResponse: function (err, res, request, reply, settings, ttl) {
         const query = request.url.search ? request.url.search : ''
-        const url = 'http://' + request.host + request.path
+        const url = protocol + request.host + request.path
 
-        if(url == "http://www.hkepc.com/forum/logging.php"){
+        if(url == hkepcLoginUrl){
           // return the cookie for future browsering
           reply(res.headers['set-cookie'])
         }
