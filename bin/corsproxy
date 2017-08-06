@@ -10,7 +10,7 @@ var port = parseInt(process.env.CORSPROXY_PORT || process.env.PORT || 1337, 10)
 var host = (process.env.CORSPROXY_HOST || '0.0.0.0');
 var proxy = server.connection({ port: port, labels: ['proxy'], host: host})
 
-const protocol = 'https://'
+const protocol = 'http://'
 const hkepcLoginUrl = protocol + "www.hkepc.com/forum/logging.php"
 
 server.register(require('inert'), function () {})
@@ -30,6 +30,7 @@ server.register({
 }, function (error) {
   if (error) server.log('error', error)
 })
+
 
 // proxy route
 proxy.route({
@@ -88,8 +89,12 @@ proxy.route({
 proxy.route({
   method: 'OPTIONS',
   path: '/{host}/{path*}',
-  handler: function(request, reply) {
-    return reply('')
+  handler: function(request,reply) {
+    const response = reply();
+
+    response.header('Access-Control-Allow-Origin', '*');
+    response.header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
+    response.header('Access-Control-Max-Age', '86400');
   }
 })
 proxy.route({
@@ -99,50 +104,6 @@ proxy.route({
     file: 'public/favicon.ico'
   }
 })
-
-if (process.env.DEBUG) {
-  var testport = port + 1
-  var test = server.connection({ port: testport, labels: ['test'], host: host })
-
-  server.register(require('vision'), function (error) {
-    if (error) {
-      throw error
-    }
-
-    server.views({
-      engines: { ejs: require('ejs') },
-      path: 'public/test'
-    })
-  })
-
-  test.route({
-    method: 'GET',
-    path: '/favicon.ico',
-    handler: {
-      file: 'public/favicon.ico'
-    }
-  })
-  test.route({
-    method: 'GET',
-    path: '/test.json',
-    handler: {
-      file: 'public/test/test.json'
-    }
-  })
-
-  test.route({
-    method: 'GET',
-    path: '/',
-    handler: function (request, reply) {
-      reply.view('index', {
-        proxyPort: proxy.info.port,
-        testPort: test.info.port
-      })
-    }
-  })
-
-  server.log('info', 'Debug server starting at: ' + test.info.uri)
-}
 
 server.start(function (error) {
   if (error) server.log('error', error)
