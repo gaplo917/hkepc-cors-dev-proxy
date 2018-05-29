@@ -10,7 +10,7 @@ var port = parseInt(process.env.CORSPROXY_PORT || process.env.PORT || 1337, 10)
 var host = (process.env.CORSPROXY_HOST || '0.0.0.0');
 var proxy = server.connection({ port: port, labels: ['proxy'], host: host})
 
-const protocol = 'http://'
+const protocol = 'https://'
 const hkepcLoginUrl = protocol + "www.hkepc.com/forum/logging.php"
 
 server.register(require('inert'), function () {})
@@ -71,7 +71,7 @@ proxy.route({
           reply(res.headers['set-cookie'])
         }
         else{
-          reply(res);          
+          reply(res);
         }
       }
     }
