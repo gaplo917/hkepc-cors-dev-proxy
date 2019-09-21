@@ -16,8 +16,8 @@ const loggerOptions = {
 }
 
 const server = new Hapi.Server({})
-const port = parseInt(process.env.CORSPROXY_PORT || process.env.PORT || 1337, 10)
-const host = (process.env.CORSPROXY_HOST || '0.0.0.0')
+const port = parseInt(process.env.PORT || 1337, 10)
+const host = (process.env.HOST || '0.0.0.0')
 const proxy = server.connection({ port: port, labels: ['proxy'], host: host })
 
 const protocol = 'https://'

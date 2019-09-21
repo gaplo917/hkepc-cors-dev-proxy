@@ -18,7 +18,7 @@
     "eslint-plugin-standard": "^4.0.0"
   },
   "scripts": {
-    "start": "node src/corsproxy.js",
+    "start": "HOST=0.0.0.0 PORT=1337 node src/corsproxy.js",
     "lint": "eslint --fix ./src --ext .js"
   }
 }
