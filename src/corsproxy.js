@@ -1,23 +1,32 @@
-#!/usr/bin/env node
+const Hapi = require('hapi')
+const good = require('good')
+const goodConsole = require('good-console')
+const corsPlugin = require('./cors-plugin')
 
-var Hapi = require('hapi')
-var plugin = require('../index')
-var good = require('good')
-var loggerOptions = require('../lib/logger-options')
+const loggerOptions = {
+  opsInterval: 1000,
+  reporters: [{
+    reporter: goodConsole,
+    events: {
+      log: '*',
+      request: '*',
+      response: '*'
+    }
+  }]
+}
 
-var server = new Hapi.Server({})
-var port = parseInt(process.env.CORSPROXY_PORT || process.env.PORT || 1337, 10)
-var host = (process.env.CORSPROXY_HOST || '0.0.0.0');
-var proxy = server.connection({ port: port, labels: ['proxy'], host: host})
+const server = new Hapi.Server({})
+const port = parseInt(process.env.CORSPROXY_PORT || process.env.PORT || 1337, 10)
+const host = (process.env.CORSPROXY_HOST || '0.0.0.0')
+const proxy = server.connection({ port: port, labels: ['proxy'], host: host })
 
 const protocol = 'https://'
-const hkepcLoginUrl = protocol + "www.hkepc.com/forum/logging.php"
+const hkepcLoginUrl = protocol + 'www.hkepc.com/forum/logging.php'
 
-server.register(require('inert'), function () {})
 server.register(require('h2o2'), function () {})
 
 // cors plugin
-server.register(plugin, {
+server.register(corsPlugin, {
   select: ['proxy']
 }, function (error) {
   if (error) server.log('error', error)
@@ -31,10 +40,9 @@ server.register({
   if (error) server.log('error', error)
 })
 
-
 // proxy route
 proxy.route({
-  method: ['GET','POST'],
+  method: ['GET', 'POST'],
   path: '/{host}/{path*}',
   handler: {
     proxy: {
@@ -48,30 +56,27 @@ proxy.route({
         request.path = request.path.substr(request.params.host.length + 1)
         const query = request.url.search ? request.url.search : ''
 
-
         request.headers['host'] = request.host
         request.headers['referer'] = protocol + request.host + request.path + query
 
         const url = protocol + request.host + request.path
 
-        if(url != hkepcLoginUrl){
+        if (url !== hkepcLoginUrl) {
           // inject the header
-          request.headers['cookie'] = request.headers['hkepc-token'] || ""
+          request.headers['cookie'] = request.headers['hkepc-token'] || ''
         }
-
 
         callback(null, protocol + request.host + request.path + query, request.headers)
       },
+      // eslint-disable-next-line handle-callback-err
       onResponse: function (err, res, request, reply, settings, ttl) {
-        const query = request.url.search ? request.url.search : ''
         const url = protocol + request.host + request.path
 
-        if(url == hkepcLoginUrl){
+        if (url === hkepcLoginUrl) {
           // return the cookie for future browsering
           reply(res.headers['set-cookie'])
-        }
-        else{
-          reply(res);
+        } else {
+          reply(res)
         }
       }
     }
@@ -82,26 +87,19 @@ proxy.route({
 proxy.route({
   method: ['GET'],
   path: '/',
-  handler: function(request,reply) {
+  handler: function (request, reply) {
     return reply('')
   }
 })
 proxy.route({
   method: 'OPTIONS',
   path: '/{host}/{path*}',
-  handler: function(request,reply) {
-    const response = reply();
+  handler: function (request, reply) {
+    const response = reply()
 
-    response.header('Access-Control-Allow-Origin', '*');
-    response.header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
-    response.header('Access-Control-Max-Age', '86400');
-  }
-})
-proxy.route({
-  method: 'GET',
-  path: '/favicon.ico',
-  handler: {
-    file: 'public/favicon.ico'
+    response.header('Access-Control-Allow-Origin', '*')
+    response.header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
+    response.header('Access-Control-Max-Age', '86400')
   }
 })
 
